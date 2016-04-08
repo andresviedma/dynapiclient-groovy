@@ -21,10 +21,11 @@ class RestDynClient extends RestDynClientPath {
     private cachedHttpClient = null
 
     RestDynClient() {
-        Thread.start {
-            Thread.sleep 100
-            fillMetaClass()
-        }
+    }
+
+    RestDynClient(Map params) {
+        params?.each { k, v -> this[k] = v }
+        fillMetaClass()
     }
 
     protected def doGet(String path, params = [:]) {
@@ -98,6 +99,11 @@ class RestDynClient extends RestDynClientPath {
         return meta
     }
 
+    String toString() {
+        //fillMetaClass()
+        return "RestDynClient: ${base} ${path}"
+    }
+
     private HTTPBuilder getHttpClient() {
         if (cachedHttpClient != null && cachedHttpClient.uri.toString() != base) {
             close()
@@ -116,6 +122,7 @@ class RestDynClient extends RestDynClientPath {
 class RestDynClientPath {
     RestDynClient client = null
     String path = ''
+    boolean hasFilledMetaClass = false
 
     def propertyMissing(String name) {
         return newPath(name)
@@ -184,6 +191,8 @@ class RestDynClientPath {
 
     String getHelp() {
         def metaDoc = client().getMeta()
+        fillMetaClass()
+
         def man = null
         if (metaDoc != null) {
             man = metaDoc.getResourceManual(path)
@@ -195,14 +204,22 @@ class RestDynClientPath {
     }
 
     def getPathAttributes() {
-        def resources = client().getMeta().getNextResourcePieces(path)
-        return resources
+        def meta = client().getMeta()
+        if (meta == null) {
+            return [] as Set
+        } else {
+            def resources = meta.getNextResourcePieces(path)
+            return resources
+        }
     }
 
-    void fillMetaClass() {
-        fillMetaClass(this)
+    synchronized void fillMetaClass() {
+        if (!hasFilledMetaClass) {
+            fillMetaClass(this)
+            hasFilledMetaClass = true
+        }
     }
-    synchronized void fillMetaClass(o) {
+    void fillMetaClass(o) {
         AutocompleteMetaClass.addFakeMethodsToObject(o, getPathAttributes(), [])
     }
 }
