@@ -20,6 +20,13 @@ class RestDynClient extends RestDynClientPath {
 
     private cachedHttpClient = null
 
+    RestDynClient() {
+        Thread.start {
+            Thread.sleep 100
+            fillMetaClass()
+        }
+    }
+
     protected def doGet(String path, params = [:]) {
         return doOperation('get', path, params)
     }
@@ -123,7 +130,9 @@ class RestDynClientPath {
         if (arguments.length > 0) {
             params = arguments[0]
         }
-        return client().doGet(nextpath(name), params)
+        def cli = client()
+        def path2 = nextpath(name)
+        return cli.doGet(path2, params)
     }
 
     def getData() {
@@ -150,16 +159,18 @@ class RestDynClientPath {
         return client().doDelete(nextpath(name))
     }
 
-    private RestDynClientPath newPath(String name) {
-        return new RestDynClientPath(client: client(), path: nextpath(name))
-    }
-
-    private String nextpath(String name) {
-        return (path == ''? name : path + '/' + name)
-    }
-
-    private RestDynClient client() {
+    protected RestDynClient client() {
         return (client != null? client : this)
+    }
+
+    protected RestDynClientPath newPath(String name) {
+        def next = new RestDynClientPath(client: client(), path: nextpath(name))
+        next.fillMetaClass()
+        return next
+    }
+
+    protected String nextpath(String name) {
+        return (path == ''? name : path + '/' + name)
     }
 
     String toString() {
@@ -186,5 +197,12 @@ class RestDynClientPath {
     def getPathAttributes() {
         def resources = client().getMeta().getNextResourcePieces(path)
         return resources
+    }
+
+    void fillMetaClass() {
+        fillMetaClass(this)
+    }
+    synchronized void fillMetaClass(o) {
+        AutocompleteMetaClass.addFakeMethodsToObject(o, getPathAttributes(), [])
     }
 }
