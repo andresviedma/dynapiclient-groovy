@@ -4,7 +4,11 @@ import groovy.time.*
 
 class ShellUtils {
     static pretty(obj) {
-        (new groovy.json.JsonBuilder(obj)).toPrettyString()
+        try {
+            return (new groovy.json.JsonBuilder(obj)).toPrettyString()
+        } catch (e) {
+            return obj
+        }
     }
 
     static timed(Closure c) {
