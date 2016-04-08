@@ -3,9 +3,14 @@ package dynapiclient.rest
 @Grab('org.codehaus.groovy.modules.http-builder:http-builder:0.7.1')
 import groovyx.net.http.*
 
+import dynapiclient.utils.*
+
 class RestDynClient extends RestDynClientPath {
     String base
     String encoder = groovyx.net.http.ContentType.JSON
+
+    Closure metaLoader = null
+    private RestMetaDoc meta = null
 
     Closure paramsHandler = { a,b -> }
     Closure clientHandler = Closure.IDENTITY
@@ -77,6 +82,13 @@ class RestDynClient extends RestDynClientPath {
             cachedHttpClient.shutdown()
             cachedHttpClient = null
         }
+    }
+
+    def getMeta() {
+        if (meta == null && metaLoader != null) {
+            meta = metaLoader(base)
+        }
+        return meta
     }
 
     private HTTPBuilder getHttpClient() {
@@ -151,20 +163,28 @@ class RestDynClientPath {
     }
 
     String toString() {
-        return getPathDoc()
+        if (this == client())  return super.toString()
+        return getHelp()
     }
 
-    String getPathDoc() {
-        return "*** path: ${path}"
+    String help() {
+        return getHelp()
     }
-}
 
-class RestDynClientException extends RuntimeException {
-    final HttpResponseException httpException
+    String getHelp() {
+        def metaDoc = client().getMeta()
+        def man = null
+        if (metaDoc != null) {
+            man = metaDoc.getResourceManual(path)
+        }
+        if (man == null) {
+            man = "*** path: ${path}"
+        }
+        return man
+    }
 
-    RestDynClientException(httpException) { this.httpException = httpException }
-
-    def getCode() { httpException.response.status }
-    def getData() { httpException.response.data }
-    String getMessage() { "(${code}): ${data}" }
+    def getPathAttributes() {
+        def resources = client().getMeta().getNextResourcePieces(path)
+        return resources
+    }
 }
