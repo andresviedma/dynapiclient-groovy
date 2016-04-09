@@ -14,8 +14,8 @@ class AutocompleteMetaClass extends DelegatingMetaClass {
 
     static AutocompleteMetaClass configureAutocompleteMetaClassInObject(Object object) {
         if (!hasAutocompleteMeta(object)) {
-            object.getMetaClass().help = { ...args ->
-                object.methodMissing(innerMeta, args)
+            object.getMetaClass().help2 = { ...args ->
+                object.methodMissing('help2', args)
             }
         }
 
@@ -25,7 +25,7 @@ class AutocompleteMetaClass extends DelegatingMetaClass {
     private static void addFakeMethodsToExpando(MetaClass meta, Object object, Collection<String> methods, Collection<String> properties) {
         for (def method : methods) {
             meta."${method}" = { ...args ->
-                object.methodMissing(innerMeta, args)
+                object.methodMissing(method, args)
             }
         }
 
