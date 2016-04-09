@@ -133,6 +133,10 @@ class RestDynClientPath {
     }
 
     def methodMissing(String name, arguments) {
+        callGet(name, arguments)
+    }
+
+    def callGet(String name, arguments) {
         def params = [:]
         if (arguments.length > 0) {
             params = arguments[0]
