@@ -41,7 +41,7 @@ println "*** Comments of post 37 (GET):"
 println pretty(blog.posts."37".comments())
 
 println "\n*** Data of post 37 (GET):"
-println pretty(blog.posts."37"()
+println pretty(blog.posts."37"())
 
 println "\n*** Modify post 37 (PUT):"
 println blog.posts."37" =
