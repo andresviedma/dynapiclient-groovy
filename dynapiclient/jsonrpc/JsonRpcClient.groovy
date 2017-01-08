@@ -7,7 +7,7 @@ import static groovyx.net.http.Method.GET
 import static groovyx.net.http.ContentType.JSON
 import static groovyx.net.http.ContentType.TEXT
 
-class JsonRpcClient {
+class JsonRpcClient implements Cloneable {
     String base
     boolean exceptionOnError = true
     boolean handleNamedParameters = true
@@ -15,6 +15,7 @@ class JsonRpcClient {
     Closure clientHandler = Closure.IDENTITY
     Closure paramsHandler = Closure.IDENTITY
 
+    private String methodPrefix = ''
     private httpClient = null
 
     JsonRpcClient() {
@@ -24,9 +25,19 @@ class JsonRpcClient {
         return makeCall(name, args)
     }
 
+    def propertyMissing(String name) {
+        def result = clone()
+        result.methodPrefix = methodPrefix + name + '.'
+        return result
+    }
+
     def makeCall(String name, args) {
         def json = jsonCall(name, args)
-        def errorMsg = (json?.result?.error?.info ?: json?.error?.message)
+        def errorMsg = null
+        if (json?.result != null && (json?.result instanceof Map)) {
+            errorMsg = json?.result?.error?.info
+        }
+        errorMsg = errorMsg ?: (json?.error?.message)
         if (errorMsg == null) {
             return json?.result
         } else if (exceptionOnError) {
@@ -52,7 +63,7 @@ class JsonRpcClient {
             body = [
                 "jsonrpc": "2.0",
                 "id": callId,
-                "method": name,
+                "method": methodPrefix + name,
                 "params": params
             ]
         }
