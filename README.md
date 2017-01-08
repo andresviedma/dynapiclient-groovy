@@ -8,25 +8,25 @@ The whys and hows of this idea are explained in
 
 ## Examples of use
 
-### JSON-RPC: Kanboard
+### JSON-RPC: Random.org
 
 ```groovy
 import dynapiclient.jsonrpc.*
 import static dynapiclient.utils.ShellUtils.*
 
 client = new JsonRpcClient(
-    base: 'http://demo.kanboard.net/jsonrpc.php',
-    clientHandler: { it.auth.basic 'demo', 'demo123' }
+    base: 'https://api.random.org/json-rpc/1/invoke',
+    paramsHandler: { (it instanceof Map? it : [:]) + [apiKey: auth.random.apiKey] }
     )
 
-println "*** Projects:"
-projects = client.getMyProjects()
-println pretty(projects)
+println "*** Random numbers:"
+numbers = client.generateIntegers(n: 6, min: 1, max: 60)
+println pretty(numbers)
 println()
 
-println "*** Project 1 Tasks:"
-tasks = client.getAllTasks(project_id: 1, status_id: 1)
-println pretty(tasks)
+println "*** Random UUIDs:"
+uuids = client.generateUUIDs(n: 2)
+println pretty(uuids)
 ```
 
 ### REST (writable): JsonPlaceholder
